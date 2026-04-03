@@ -1,0 +1,35 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Debug logs
+*.log
+search_debug.log
+
+# User data / local cache
+*.xlsx
+*.csv
+*.json.bak
+AppData/
+
+# Publish output
+publish/
+*.msix
+*.appx
+
+# NuGet
+packages/
+*.nupkg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider / JetBrains
+.idea/
+
+# VS Code
+.vscode/
