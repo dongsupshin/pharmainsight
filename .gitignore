@@ -19,6 +19,10 @@ AppData/
 publish/
 *.msix
 *.appx
+*.msixupload
+*.appxupload
+AppPackages/
+BundleArtifacts/
 
 # NuGet
 packages/

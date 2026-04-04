@@ -93,22 +93,56 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 
 ## 🏪 Microsoft Store 배포
 
-### MSIX 패키징 (Store 제출용)
+### 배포 현황
+- ✅ Microsoft 개발자 계정 등록 완료
+- ✅ 앱 이름 "Pharma Insight KR" 예약 완료 (partner.microsoft.com)
+- ✅ MSIX 패키지 빌드 및 Windows 앱 인증 키트(WACK) 통과
+- ✅ Partner Center 제출 완료 → **현재 In Certification 심사 중**
+- **앱 이름**: Pharma Insight KR
+- **가격**: 무료
+- **배포 지역**: 한국
+- **카테고리**: Business
+- **패키지**: PharmaInsight_1.0.17.0_x64_bundle.msixupload
 
-Visual Studio에서:
-1. 솔루션 탐색기 → 프로젝트 우클릭 → **게시(Publish)**
-2. Microsoft Store 선택 → 패키징 마법사 진행
+---
 
-또는 명령줄:
-```bash
-dotnet publish -c Release -r win-x64 /p:AppxPackage=true
+### MSIX 패키징 시행착오 및 해결 방법
+
+#### 1. 앱 이름 예약 오류 (Visual Studio에서 "예기치 않은 오류")
+- **원인**: Visual Studio에서 직접 예약 시 간헐적 오류 발생
+- **해결**: partner.microsoft.com에서 직접 앱 이름 예약
+
+#### 2. `project.assets.json` 누락 오류 (NETSDK1047)
+- **원인**: `MedSearchApp.csproj`에 `RuntimeIdentifiers` 미설정 → wappublish 경로에 win-x64 assets 미생성
+- **해결**: `MedSearchApp.csproj`의 `PropertyGroup`에 아래 추가
+```xml
+<RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
+```
+이후 MSBuild로 restore (VS 설치 경로가 `18`인 점 주의):
+```powershell
+& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" `
+  "PharmaInsight\PharmaInsight.wapproj" `
+  /t:Restore /p:RuntimeIdentifier=win-x64 /p:Configuration=Release /p:Platform=x64
 ```
 
-### 필요한 추가 작업 (Store 제출 전)
-- [ ] 앱 아이콘 (`app.ico`, 각종 해상도 PNG) 추가
-- [ ] Package.appxmanifest 작성
-- [ ] Microsoft 개발자 계정 등록 ($19 일회성)
-- [ ] 개인정보처리방침 URL 준비 (무료 호스팅 가능)
+#### 3. `AppCert.exe` 도구를 찾지 못하는 오류
+- **원인**: Windows SDK 실제 설치 경로(`C:\Program Files (x86)\Windows Kits\10\`)와 레지스트리 `KitsRoot10` 값(`C:\Program Files\Windows Kits\10\`) 불일치
+- **해결**: Visual Studio를 관리자 권한으로 실행 후 패키지 관리자 콘솔에서:
+```powershell
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots" `
+  -Name "KitsRoot10" -Value "C:\Program Files (x86)\Windows Kits\10\"
+```
+
+#### 4. WACK 브랜딩 오류 (기본 이미지 사용)
+- **원인**: 템플릿 기본 이미지(StoreLogo, Square44x44 등) 그대로 사용
+- **해결**: `PharmaInsight/Images/` 폴더의 모든 이미지를 앱 전용 이미지로 교체
+  - StoreLogo.png (50×50)
+  - Square44x44Logo.scale-200.png (88×88)
+  - Square44x44Logo.targetsize-24_altform-unplated.png (24×24)
+  - Square150x150Logo.scale-200.png (300×300)
+  - Wide310x150Logo.scale-200.png (620×300)
+  - SplashScreen.scale-200.png (1240×600)
+  - LockScreenLogo.scale-200.png (48×48)
 
 ---
 
