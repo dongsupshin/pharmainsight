@@ -24,9 +24,11 @@ publish/
 AppPackages/
 BundleArtifacts/
 
-# NuGet
+# NuGet / restore caches
 packages/
 *.nupkg
+*.assets.cache
+*.nuget.dgspec.json
 
 # OS
 .DS_Store

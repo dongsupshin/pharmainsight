@@ -36,32 +36,17 @@ public partial class App : Application
         }
 
         // 검색 서비스 우선순위:
-        //   1순위: 사업자번호 데이터 (사업자번호 포함)
-        //   2순위: HIRA API (실시간 검색, 사업자번호 미포함)
-        var csvService  = new CsvDataService(dataPath);
-        var hiraService = new HiraApiService(httpClient, settings.HiraApiKey);
+        //   1순위: 로컬 데이터 (사업자번호 포함, 전국 전체)
+        //   2순위: HIRA API  (실시간 검색, 사업자번호 미포함)
+        //   3순위: 샘플 데이터 (내장, 설치 즉시 사용 가능 — 항상 활성)
+        var csvService    = new CsvDataService(dataPath);
+        var hiraService   = new HiraApiService(httpClient, settings.HiraApiKey);
+        var sampleService = new SampleDataService();
 
-        var services = new List<ISearchService> { csvService, hiraService };
-
-        // API 키도 없고 데이터도 없으면 설정 창 먼저 표시
-        if (!services.Any(s => s.IsAvailable))
-        {
-            var settingsWindow = new SettingsWindow(settings);
-            settingsWindow.ShowDialog();
-
-            // 설정 다시 로드
-            settings = AppSettings.Load();
-            dataPath = settings.ResolveDataPath();
-
-            services = new List<ISearchService>
-            {
-                new CsvDataService(dataPath),
-                new HiraApiService(httpClient, settings.HiraApiKey)
-            };
-        }
+        var services = new List<ISearchService> { csvService, hiraService, sampleService };
 
         // Bizno API (사업자번호 자동 조회)
-        var biznoService = new BiznoApiService(httpClient, settings.BiznoApiKey);
+        var biznoService  = new BiznoApiService(httpClient, settings.BiznoApiKey);
 
         var orchestrator = new SearchOrchestrator(services);
         var viewModel    = new MainViewModel(orchestrator, biznoService);
@@ -76,6 +61,12 @@ public partial class App : Application
                 var updated = AppSettings.Load();
                 biznoService.UpdateApiKey(updated.BiznoApiKey);
             }
+        };
+
+        viewModel.OpenGuideAction = () =>
+        {
+            var guideWindow = new GuideWindow(viewModel) { Owner = window };
+            guideWindow.ShowDialog();
         };
 
         window.Show();

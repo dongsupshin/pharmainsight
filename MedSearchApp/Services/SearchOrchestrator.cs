@@ -46,7 +46,11 @@ public class SearchOrchestrator
                 if (items.Count > 0)
                 {
                     Log($"  → 반환: {items.Count}건");
-                    return new SearchResult(items, $"[{service.ServiceName}] {items.Count}건 검색됨");
+                    var isSample = service.ServiceName == "샘플 데이터";
+                    var msg = isSample
+                        ? $"[샘플 데이터] {items.Count}건 — 전체 데이터는 설정에서 HIRA 파일을 설치하세요"
+                        : $"[{service.ServiceName}] {items.Count}건 검색됨";
+                    return new SearchResult(items, msg);
                 }
             }
             catch (OperationCanceledException)
