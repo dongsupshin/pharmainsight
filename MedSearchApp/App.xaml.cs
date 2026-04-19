@@ -36,20 +36,34 @@ public partial class App : Application
         }
 
         // 검색 서비스 우선순위:
-        //   1순위: 로컬 데이터 (사업자번호 포함, 전국 전체)
-        //   2순위: HIRA API  (실시간 검색, 사업자번호 미포함)
-        //   3순위: 샘플 데이터 (내장, 설치 즉시 사용 가능 — 항상 활성)
+        //   HIRA 키 있음 → HIRA 우선 (의사수/간호사수/등급 등 B2B Pro 필수 데이터)
+        //                    → LocalData 폴백 (사업자번호는 bizno.net으로 enrichment)
+        //   HIRA 키 없음 → LocalData 우선 (오프라인 동작)
+        //   둘 다 없음 → 샘플 데이터 (설치 즉시 사용)
         var csvService    = new CsvDataService(dataPath);
         var hiraService   = new HiraApiService(httpClient, settings.HiraApiKey);
         var sampleService = new SampleDataService();
 
-        var services = new List<ISearchService> { csvService, hiraService, sampleService };
+        var services = new List<ISearchService>();
+        if (!string.IsNullOrWhiteSpace(settings.HiraApiKey))
+        {
+            // HIRA 우선: Pro 필터용 의사수/등급 데이터 확보
+            services.Add(hiraService);
+            services.Add(csvService);
+        }
+        else
+        {
+            // HIRA 키 없음: 로컬 데이터 먼저
+            services.Add(csvService);
+            services.Add(hiraService);
+        }
+        services.Add(sampleService);
 
         // Bizno API (사업자번호 자동 조회)
         var biznoService  = new BiznoApiService(httpClient, settings.BiznoApiKey);
 
         var orchestrator = new SearchOrchestrator(services);
-        var viewModel    = new MainViewModel(orchestrator, biznoService);
+        var viewModel    = new MainViewModel(orchestrator, settings, biznoService);
         var window       = new MainWindow(viewModel);
 
         viewModel.OpenSettingsAction = () =>
@@ -57,9 +71,16 @@ public partial class App : Application
             var settingsWindow = new SettingsWindow(AppSettings.Load());
             if (settingsWindow.ShowDialog() == true)
             {
-                // 설정 저장 후 bizno API 키 업데이트 (재시작 없이 적용)
+                // 설정 저장 후 bizno API 키 + Pro 라이선스 업데이트 (재시작 없이 적용)
                 var updated = AppSettings.Load();
                 biznoService.UpdateApiKey(updated.BiznoApiKey);
+
+                // ViewModel이 참조 중인 settings를 업데이트하고 Pro 상태 재확인
+                settings.ProLicenseKey = updated.ProLicenseKey;
+                settings.HiraApiKey    = updated.HiraApiKey;
+                settings.BiznoApiKey   = updated.BiznoApiKey;
+                settings.CsvFilePath   = updated.CsvFilePath;
+                viewModel.RefreshProStatus();
             }
         };
 

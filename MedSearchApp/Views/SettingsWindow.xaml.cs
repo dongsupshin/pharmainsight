@@ -18,15 +18,37 @@ public partial class SettingsWindow : Window
         // 기존 키 표시
         HiraKeyBox.Text = settings.HiraApiKey;
         BiznoKeyBox.Text = settings.BiznoApiKey;
+        ProKeyBox.Text = settings.ProLicenseKey;
 
         // 배지 업데이트
         HiraKeyBox.TextChanged += (_, _) => UpdateHiraBadge();
         BiznoKeyBox.TextChanged += (_, _) => UpdateBiznoBadge();
+        ProKeyBox.TextChanged += (_, _) => UpdateProBadge();
         UpdateHiraBadge();
         UpdateBiznoBadge();
+        UpdateProBadge();
 
         // 데이터 파일 상태 업데이트
         UpdateDataStatus();
+    }
+
+    private void UpdateProBadge()
+    {
+        var tempSettings = new AppSettings { ProLicenseKey = ProKeyBox.Text.Trim() };
+        if (tempSettings.IsPro)
+        {
+            ProBadge.Background  = Brush("#D1E7DD");
+            ProBadge.BorderBrush = Brush("#198754");
+            ProBadgeText.Text       = "★ PRO 활성";
+            ProBadgeText.Foreground = Brush("#0A3622");
+        }
+        else
+        {
+            ProBadge.Background  = Brush("#FFF3CD");
+            ProBadge.BorderBrush = Brush("#FFCA2C");
+            ProBadgeText.Text       = "FREE";
+            ProBadgeText.Foreground = Brush("#856404");
+        }
     }
 
     private void UpdateHiraBadge()
@@ -99,9 +121,13 @@ public partial class SettingsWindow : Window
     {
         _settings.HiraApiKey = HiraKeyBox.Text.Trim();
         _settings.BiznoApiKey = BiznoKeyBox.Text.Trim();
+        _settings.ProLicenseKey = ProKeyBox.Text.Trim();
         _settings.Save();
 
-        MessageBox.Show("설정이 저장되었습니다.\n앱을 재시작하면 적용됩니다.",
+        var proMsg = _settings.IsPro
+            ? "\n★ PRO 기능이 활성화되었습니다."
+            : "";
+        MessageBox.Show($"설정이 저장되었습니다.{proMsg}",
                         "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
 
         DialogResult = true;

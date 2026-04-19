@@ -89,6 +89,7 @@
             <RowDefinition Height="Auto"/>   <!-- 헤더 -->
             <RowDefinition Height="Auto"/>   <!-- 검색바 -->
             <RowDefinition Height="Auto"/>   <!-- API 한도 초과 배너 -->
+            <RowDefinition Height="Auto"/>   <!-- Pro 필터 / 업그레이드 CTA -->
             <RowDefinition Height="*"/>      <!-- 결과 목록 -->
             <RowDefinition Height="Auto"/>   <!-- 상세 정보 -->
             <RowDefinition Height="Auto"/>   <!-- 상태바 -->
@@ -106,8 +107,34 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="🏥" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <StackPanel>
-                        <TextBlock Text="{Binding LblTitle}" FontSize="18"
-                                   FontWeight="Bold" Foreground="#1A1A2E"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding LblTitle}" FontSize="18"
+                                       FontWeight="Bold" Foreground="#1A1A2E"
+                                       VerticalAlignment="Center"/>
+                            <!-- PRO/FREE 배지 -->
+                            <Border CornerRadius="4" Padding="8,3" Margin="10,0,0,0"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPro}" Value="True">
+                                                <Setter Property="Background" Value="#FEF3C7"/>
+                                                <Setter Property="BorderBrush" Value="#F2B900"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsPro}" Value="False">
+                                                <Setter Property="Background" Value="#F3F4F6"/>
+                                                <Setter Property="BorderBrush" Value="#D1D5DB"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding ProBadgeText}"
+                                           FontSize="10" FontWeight="Bold"
+                                           Foreground="#8B5A00"/>
+                            </Border>
+                        </StackPanel>
                         <TextBlock Text="{Binding LblSubtitle}"
                                    FontSize="11" Foreground="#666"/>
                     </StackPanel>
@@ -264,8 +291,120 @@
             </Grid>
         </Border>
 
+        <!-- ── Pro 필터 바 (PRO 활성 시) / 업그레이드 CTA (Free 시) ── -->
+        <Border Grid.Row="3" Margin="0,0,0,12">
+            <Grid>
+                <!-- Free: 업그레이드 CTA -->
+                <Border Background="#FFF9E6" BorderBrush="#F2B900" BorderThickness="1"
+                        CornerRadius="6" Padding="14,10"
+                        Visibility="{Binding ProUpgradePromptVisible,
+                            Converter={StaticResource BoolToVisibility}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="★" FontSize="18" Foreground="#8B5A00"
+                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding LblProUpgrade}"
+                                   FontSize="12" Foreground="#5A3B00"
+                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <Button Grid.Column="2"
+                                Content="{Binding ProUpgradeCta}"
+                                Command="{Binding UpgradeToProCommand}"
+                                Background="#F2B900" Foreground="#4A2F00"
+                                BorderThickness="0" Padding="14,7" FontSize="12"
+                                FontWeight="SemiBold" Cursor="Hand" Margin="12,0,0,0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#D9A600"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Pro: 타겟 필터 -->
+                <Border Style="{StaticResource Card}"
+                        Visibility="{Binding IsPro,
+                            Converter={StaticResource BoolToVisibility}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="{Binding LblFilterTitle}"
+                                   FontWeight="SemiBold" FontSize="12"
+                                   VerticalAlignment="Center" Margin="0,0,14,0"
+                                   Foreground="#8B5A00"/>
+
+                        <TextBlock Grid.Column="1" Text="{Binding LblFilterGrade}"
+                                   FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <ComboBox Grid.Column="2" Width="70"
+                                  SelectedValue="{Binding SelectedGradeFilter}"
+                                  SelectedValuePath="Content"
+                                  Margin="0,0,12,0">
+                            <ComboBoxItem Content="" IsSelected="True"/>
+                            <ComboBoxItem Content="S"/>
+                            <ComboBoxItem Content="A"/>
+                            <ComboBoxItem Content="B"/>
+                            <ComboBoxItem Content="C"/>
+                        </ComboBox>
+
+                        <TextBlock Grid.Column="3" Text="{Binding LblFilterType}"
+                                   FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <ComboBox Grid.Column="4" Width="130"
+                                  SelectedValue="{Binding SelectedTypeFilter}"
+                                  SelectedValuePath="Content"
+                                  Margin="0,0,12,0">
+                            <ComboBoxItem Content=""/>
+                            <ComboBoxItem Content="상급종합병원"/>
+                            <ComboBoxItem Content="종합병원"/>
+                            <ComboBoxItem Content="병원"/>
+                            <ComboBoxItem Content="의원"/>
+                            <ComboBoxItem Content="약국"/>
+                        </ComboBox>
+
+                        <TextBlock Grid.Column="5" Text="{Binding LblFilterMinDoc}"
+                                   FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBox Grid.Column="6" Width="60" HorizontalAlignment="Left"
+                                 Text="{Binding MinDoctorCount, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="6,4" VerticalContentAlignment="Center"/>
+
+                        <Button Grid.Column="7" Content="{Binding LblApplyFilter}"
+                                Command="{Binding ApplyFilterCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                Padding="14,6" FontSize="12" Margin="8,0,6,0"/>
+                        <Button Grid.Column="8" Content="{Binding LblClearFilter}"
+                                Command="{Binding ClearFilterCommand}"
+                                Style="{StaticResource OutlineButton}"
+                                Padding="12,6" FontSize="12"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- ── 결과 목록 ── -->
-        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,0,0,12">
+        <Border Grid.Row="4" Style="{StaticResource Card}" Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -410,6 +549,70 @@
                             </DataGridTextColumn.Header>
                         </DataGridTextColumn>
 
+                        <!-- ★ Pro: 추정매출등급 -->
+                        <DataGridTextColumn
+                            Binding="{Binding RevenueGrade}"
+                            Width="70">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="{Binding DataContext.ColGrade,
+                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataGridTextColumn.Header>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="S">
+                                            <Setter Property="Foreground" Value="#B91C1C"/>
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="A">
+                                            <Setter Property="Foreground" Value="#C2410C"/>
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="B">
+                                            <Setter Property="Foreground" Value="#0369A1"/>
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="C">
+                                            <Setter Property="Foreground" Value="#4B5563"/>
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="🔒">
+                                            <Setter Property="Foreground" Value="#D97706"/>
+                                            <Setter Property="FontWeight" Value="Normal"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- ★ Pro: 의사수 (마스킹 지원) -->
+                        <DataGridTextColumn
+                            Binding="{Binding DoctorTotalCount, Converter={StaticResource MaskedInt}}"
+                            Width="60">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="{Binding DataContext.ColDoctors,
+                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataGridTextColumn.Header>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- ★ Pro: 간호사수 (마스킹 지원) -->
+                        <DataGridTextColumn
+                            Binding="{Binding NurseCount, Converter={StaticResource MaskedInt}}"
+                            Width="70">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="{Binding DataContext.ColNurses,
+                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataGridTextColumn.Header>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
                         <DataGridTextColumn Binding="{Binding PhoneNumber}"
                                             Width="110">
                             <DataGridTextColumn.Header>
@@ -432,7 +635,7 @@
         </Border>
 
         <!-- ── 선택 항목 상세 ── -->
-        <Border Grid.Row="4" Style="{StaticResource Card}" Margin="0,0,0,12"
+        <Border Grid.Row="5" Style="{StaticResource Card}" Margin="0,0,0,12"
                 Visibility="{Binding SelectedItem,
                     Converter={StaticResource NullToVisibility}}">
             <Grid>
@@ -512,7 +715,7 @@
         </Border>
 
         <!-- ── 상태바 ── -->
-        <Border Grid.Row="5" Background="#E8E8E8" CornerRadius="4" Padding="12,6">
+        <Border Grid.Row="6" Background="#E8E8E8" CornerRadius="4" Padding="12,6">
             <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#555"/>
         </Border>
     </Grid>

@@ -15,6 +15,29 @@ public class AppSettings
     /// <summary>bizno.net (머니핀) 사업자 검색 API 키 — 상호명→사업자등록번호 자동 조회</summary>
     public string BiznoApiKey { get; set; } = "Gc9nG3BuJhBVH04nGhBdGvuOH0pn2v9m";
 
+    /// <summary>
+    /// Pro 라이선스 키 — 입력 시 Pro 기능 활성화 (전체 결과/규모 점수/추정매출 등급 등).
+    /// MS Store IAP 연동 전 임시 키 검증 (ValidatePro() 참조).
+    /// </summary>
+    public string ProLicenseKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Pro 활성화 여부 — ProLicenseKey가 유효하면 true.
+    /// 무료: 상위 5건 + 등급/의사수 마스킹.
+    /// Pro: 무제한 + 전체 필드.
+    /// </summary>
+    public bool IsPro => ValidatePro(ProLicenseKey);
+
+    /// <summary>
+    /// 임시 라이선스 검증 — 추후 MS Store IAP 또는 서버 검증으로 교체.
+    /// 현재는 접두사 "PHARMA-PRO-"로 시작하는 16자 이상 키를 유효로 간주.
+    /// </summary>
+    private static bool ValidatePro(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return false;
+        return key.StartsWith("PHARMA-PRO-") && key.Length >= 16;
+    }
+
     /// <summary>사업자번호 데이터 파일 경로 (CSV, XLSX, ZIP)</summary>
     public string CsvFilePath { get; set; } = string.Empty;
 

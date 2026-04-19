@@ -203,6 +203,35 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ★ PRO 라이선스 -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12"
+                        Background="#FFF9E6" BorderBrush="#F2B900" BorderThickness="1">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="★ PharmaInsight PRO"
+                                           FontWeight="Bold" FontSize="14" Foreground="#8B5A00"/>
+                                <TextBlock Text="무제한 검색 · 의사수/추정매출등급 · 타겟 필터 · Excel 일괄 추출"
+                                           FontSize="11" Foreground="#8B5A00" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" x:Name="ProBadge"
+                                    Style="{StaticResource BadgeRed}" VerticalAlignment="Center">
+                                <TextBlock x:Name="ProBadgeText" Text="FREE"
+                                           FontSize="11" Foreground="#856404"/>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource Label}" Text="라이선스 키"/>
+                        <TextBox x:Name="ProKeyBox" Style="{StaticResource InputBox}" Margin="0,0,0,6"/>
+                        <TextBlock FontSize="11" Foreground="#8B5A00" TextWrapping="Wrap"
+                                   Text="PRO 라이선스 키를 입력하고 저장하면 전체 기능이 활성화됩니다. 구매 문의: pharmainsight.kr"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Bizno API (사업자번호 자동 조회) -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>

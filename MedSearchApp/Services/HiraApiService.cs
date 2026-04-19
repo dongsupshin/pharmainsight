@@ -39,6 +39,13 @@ public class HiraApiService : ISearchService
         catch { }
     }
 
+    /// <summary>XML 숫자 필드를 int로 안전 파싱</summary>
+    private static int ParseInt(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return 0;
+        return int.TryParse(raw.Trim(), out var v) ? v : 0;
+    }
+
     public HiraApiService(HttpClient httpClient, string apiKey)
     {
         _httpClient = httpClient;
@@ -105,8 +112,47 @@ public class HiraApiService : ISearchService
                     InstitutionType = item.Element("clCdNm")?.Value   ?? string.Empty,
                     PhoneNumber     = item.Element("telno")?.Value    ?? string.Empty,
                     DataSource      = source,
-                    BusinessNumber  = string.Empty  // 공공데이터 미제공, 사용자 직접 입력
+                    BusinessNumber  = string.Empty,  // 공공데이터 미제공, 사용자 직접 입력
+
+                    // ── B2B Pro 필드: 의료진/규모 ──
+                    DoctorTotalCount = ParseInt(item.Element("drTotCnt")?.Value),
+                    NurseCount       = ParseInt(item.Element("pnursCnt")?.Value),
+                    EstablishedDate  = item.Element("estbDd")?.Value ?? string.Empty,
+                    XPos             = item.Element("XPos")?.Value   ?? string.Empty,
+                    YPos             = item.Element("YPos")?.Value   ?? string.Empty,
                 };
+
+                // 전문의 = mdeptGdrCnt + detyGdrCnt + cmdcGdrCnt (의/치/한 일반의=전문의 수)
+                inst.SpecialistCount =
+                    ParseInt(item.Element("mdeptGdrCnt")?.Value) +
+                    ParseInt(item.Element("detyGdrCnt")?.Value)  +
+                    ParseInt(item.Element("cmdcGdrCnt")?.Value);
+
+                // 인턴 = mdeptIntnCnt + detyIntnCnt + cmdcIntnCnt
+                inst.InternCount =
+                    ParseInt(item.Element("mdeptIntnCnt")?.Value) +
+                    ParseInt(item.Element("detyIntnCnt")?.Value)  +
+                    ParseInt(item.Element("cmdcIntnCnt")?.Value);
+
+                // 레지던트 = mdeptResdntCnt + detyResdntCnt + cmdcResdntCnt
+                inst.ResidentCount =
+                    ParseInt(item.Element("mdeptResdntCnt")?.Value) +
+                    ParseInt(item.Element("detyResdntCnt")?.Value)  +
+                    ParseInt(item.Element("cmdcResdntCnt")?.Value);
+
+                // drTotCnt가 없는 경우 합산으로 대체
+                if (inst.DoctorTotalCount == 0)
+                {
+                    var sdr =
+                        ParseInt(item.Element("mdeptSdrCnt")?.Value) +
+                        ParseInt(item.Element("detySdrCnt")?.Value)  +
+                        ParseInt(item.Element("cmdcSdrCnt")?.Value);
+                    inst.DoctorTotalCount =
+                        inst.SpecialistCount + inst.InternCount + inst.ResidentCount + sdr;
+                }
+
+                // 추정 매출 등급 산정
+                RevenueEstimator.Apply(inst);
 
                 if (!string.IsNullOrWhiteSpace(inst.Name))
                     results.Add(inst);

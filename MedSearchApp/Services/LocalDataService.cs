@@ -72,6 +72,9 @@ public class CsvDataService : ISearchService
                     inst.District = parts[1];
                 }
 
+                // 로컬 데이터에는 의사수가 없지만 약국/종별 정보로 기본 등급 부여
+                RevenueEstimator.Apply(inst);
+
                 return inst;
             })
             .ToList();

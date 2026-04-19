@@ -7,5 +7,6 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <conv:InvertBoolToVisibilityConverter x:Key="InvertBoolToVisibility"/>
         <conv:NullToVisibilityConverter x:Key="NullToVisibility"/>
+        <conv:MaskedIntConverter x:Key="MaskedInt"/>
     </Application.Resources>
 </Application>
